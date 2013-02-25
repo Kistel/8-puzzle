@@ -1,0 +1,71 @@
+
+#pragma once
+#include <iostream>
+#include <cmath>
+#include "PriorityQueue.h"
+using namespace std;
+
+//-----------------------------------------------------------------------------
+// Node: struct to hold data members and pointers of Node.
+// Data members: int hcost,char puzzle, Pointers: up, down, left and right
+//-----------------------------------------------------------------------------
+
+struct Node
+{
+  Node*up;
+	Node*down;
+	Node* left;
+	Node* right;
+	char puzzle [3][3];
+	int hcost;
+	char moves;
+
+};
+
+
+
+/*---------------------------------------------------------   
+  The Following class creates and manipulates a
+  Binary Search Tree
+-----------------------------------------------------------*/
+
+class PuzzleTree
+{
+private:
+	//Private Pointers
+	Node* Current;
+	Node* root;
+	Node* Previous;
+	
+
+	//Private Methods
+	void Insert(Node*&,Node*&);
+	void PrintTree(Node*);
+	Node* Search(Node*,char[][3]);
+	void Delete (Node*&,char [][3]);
+public:
+	//objects of Priority Queue
+	PriorityQueue Openlist;
+	PriorityQueue Closedlist;
+	//Public Methods
+	PuzzleTree(char intial[][3]);
+	~PuzzleTree(void);
+	void Insert(char [][3],char);
+	void PrintTree(void);
+	bool Search(char [][3]);
+	void Delete(char [][3]);
+	int HammingCost(char [][3]);
+
+	int Manhattan(char [][3]);
+	bool Solvable(void);
+	void GenerateChildren(char tiles [][3]);
+	void Clone(char tiles [][3],char toClone[][3]);
+	Node* Gethead(void);
+	bool SameElements(Node*&, char tiles [][3]);
+	void DeleteTree(Node* Root);
+	void run(void);
+	void ResetRoot(char tiles [][3]);
+};
+
+
+
