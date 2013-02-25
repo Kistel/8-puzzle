@@ -1,0 +1,904 @@
+#include "PuzzleTree.h"
+#include "PriorityQueue.h"
+#include <cmath>
+using namespace std;
+
+
+
+//-----------------------------------------------------------------
+// Parameterized constructor: creates an empty Binary Tree
+// @Param: void
+// @Returns: void
+//-----------------------------------------------------------------
+PuzzleTree::PuzzleTree(char intial[][3])
+{
+  root = new Node;
+	Current = NULL;
+	root->down = NULL;
+	root->up = NULL;
+	root->left = NULL;
+	root->right = NULL;
+	
+	
+
+	for(int i = 0; i < 3 ; i++)
+	{
+		for(int j =0; j<3; j++)
+		{
+			root->puzzle[i][j] = intial[i][j];
+		}
+
+	}
+	root->hcost = HammingCost(root->puzzle) + Manhattan(root->puzzle);
+	Openlist.Insert(root->puzzle,root->hcost);
+
+}
+
+
+//-----------------------------------------------------------------
+// Parameterized destructor: empty destructor
+// @Param: void
+// @Returns: void
+//-----------------------------------------------------------------
+PuzzleTree::~PuzzleTree(void)
+{
+
+}
+
+
+//---------------------------------------------------------------------
+// This private method inserts a number into the binary search tree
+// @Param: Node*& nodePtr - reference node
+// @Param: Node*& newNode - new node with number to be added
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::Insert(Node *&nodePtr, Node *&newNode)
+{
+	if (nodePtr == NULL)
+	{
+		nodePtr = newNode; //places the new node its correct location
+	}
+	else if (newNode->moves == 'L')
+	{
+		Insert(nodePtr->left,newNode); 
+	}
+	else if (newNode->moves == 'R')
+	{
+		Insert(nodePtr->right,newNode);
+
+	}else if (newNode->moves == 'U')
+	{
+
+		Insert(nodePtr->up,newNode);
+	}else
+	{
+		Insert(nodePtr->down, newNode);
+	}
+}
+
+
+//---------------------------------------------------------------------
+// This public method creates a new node with number to be added and
+// calls the private insert method with reference node and new node
+// @Param: in value -  number to be added
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::Insert(char tiles [][3], char Tmove)
+{
+	//creates new node with number to be added and sets left 
+	// and right point to Null
+	Node * Temp = new Node; 
+	Clone(tiles,Temp->puzzle);
+	Temp->hcost = HammingCost(tiles) + Manhattan(tiles);
+	Temp->moves = Tmove ;
+	Temp->left = Temp->right = Temp->down = Temp->up= NULL;
+
+	if(!root)
+	{
+		root = Temp; //sets new node to root if tree is empty
+	}
+	else
+	{
+		Insert(root,Temp); // call to private method insert
+	}		
+}
+
+//---------------------------------------------------------------------
+// This public method calls private print tree method with root of the 
+// binary search tree
+// @Param: void
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::PrintTree(void)
+{
+	PrintTree(root);
+}
+
+//---------------------------------------------------------------------
+// This private method prints the values int he binary Search tree by 
+// inorder traversal
+// @Param: Node* Root - root of binary search tree
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::PrintTree(Node* Root)
+{
+	if(!Root)
+	{
+		return; // returns if tree is empty
+	}
+	else
+	{
+		PrintTree(Root->left);
+			for(int i = 0; i < 3; i++)
+		 {
+			 for(int j = 0; j < 3 ; j++)
+			 {
+				 cout << root->puzzle [i][j];
+
+			 }
+			 cout << endl;
+		}
+		PrintTree(Root->up);
+		for(int i = 0; i < 3; i++)
+		 {
+			 for(int j = 0; j < 3 ; j++)
+			 {
+				 cout << root->puzzle [i][j];
+
+			 }
+			 cout << endl;
+		}
+		PrintTree(Root->right);
+		for(int i = 0; i < 3; i++)
+		 {
+			 for(int j = 0; j < 3 ; j++)
+			 {
+				 cout << root->puzzle [i][j];
+			 }
+			 cout << endl;
+		}
+		PrintTree(Root->down);
+	}
+}
+
+//---------------------------------------------------------------------
+// This public method calls private search method to locate number 
+// in the tree. 
+// @Param: int key - the number to look for
+// @Returns: bool message - true if number was found and false if not
+//---------------------------------------------------------------------
+bool PuzzleTree::Search(char board[][3])
+{
+	// sets current pointer to point of value in tree
+	Current = Search(root,board); 
+
+	if(Current)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+//---------------------------------------------------------------------
+// This private method locates a number in the binary search tree
+// @Param: Node* Root - root of binary search tree 
+// @Param: int key - the number to look for
+// @Returns: Node* pointer- returns address of number in binary true
+//                          or Null if not found
+//---------------------------------------------------------------------
+Node* PuzzleTree::Search(Node* Root,char board[][3])
+{
+	if(!Root)
+	{
+		return NULL;
+	}
+	else if(SameElements(Root,board) == true)
+	{
+		return Root;
+	
+	}
+	else if(Root->moves == 'U')
+	{
+		return Search(Root->up,board);
+	}
+	else if(Root->moves == 'D')
+	{
+		return Search(Root->down,board);
+	} 
+	else if(Root->moves == 'L')
+	{
+
+		return Search(Root->left,board);
+
+	}
+	else if(Root->moves == 'R')
+	{
+
+		return Search(Root->right,board);
+	}
+}
+
+//---------------------------------------------------------------------
+// This public method calls the private delete method with the 
+// number to be deleted
+// @Param: int num - number to be deleted
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::Delete(char tiles[][3])
+{
+	if(!root)
+	{
+		return;// returns if binary search tree is empty
+	}
+	else
+	{
+		Delete(root,tiles);
+	}
+}
+
+
+//---------------------------------------------------------------------
+// This private method deletes a node from a binary search tree
+// @Param: Node*& Rptr - root of binary search tree
+// @Param: int n - number to be deleted
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree:: Delete (Node*& Rptr,char board[][3])
+{
+	Node * Temp = Rptr; 
+	Node *attach; 	// holds attach location 
+	Node *attach2;
+
+	if(Rptr->moves == 'U')
+	{	
+		Delete (Rptr->up,Rptr->puzzle);//locates node in right subtree
+	}
+	else if (Rptr->moves == 'D')
+	{	
+		Delete (Rptr->down, Rptr->puzzle);//locates node in left subtree
+	}else if(Rptr->moves == 'L')
+	{
+		Delete(Rptr->left,Rptr->puzzle);
+	}else if( Rptr->moves == 'R')
+	{
+		Delete(Rptr->right,Rptr->puzzle);
+
+	}
+	else
+	{
+		if(Rptr->left == NULL)
+		{
+			Rptr = Rptr-> right;
+		}
+		else if (Rptr ->right == NULL)
+		{
+			Rptr = Rptr->left;
+		}else if (Rptr->down == NULL)
+		{
+
+			Rptr = Rptr->up;
+		}else if(Rptr->up == NULL)
+		{
+
+			Rptr = Rptr->down;
+		}
+		else 	// node has two children
+		{
+			attach= Rptr->right;
+			while (attach->left != NULL)// locates the smallest node
+			{
+				attach = attach->left;
+			}	
+			attach->left = Rptr->left;//reattaches the left subtree		
+			Rptr = Rptr->right; // replace with its right subtree
+
+			attach2 = Rptr->down;
+			while (attach->up != NULL)
+			{
+
+				attach = attach->up;
+			}
+			attach2->up = Rptr->up;
+			Rptr = Rptr->down;
+
+		}
+		delete Temp; // deletes node
+	}
+}
+
+
+//---------------------------------------------------------------------
+// This private method calculates the Hamming Code Cost for each node
+// @Param: char ptemp [][3]-a two-D array with tiles
+// @Param:void
+// @Returns: int cost-cost of the move in comparision goal state
+//---------------------------------------------------------------------
+int PuzzleTree::HammingCost(char ptemp[][3])
+{
+	int cost = 0;
+	char goalstate[3][3] = {'1','2','3',
+							'4','5','6',
+							'7','8','0'};
+	
+	for(int i =0; i<3; i++)
+	{
+		for(int j=0; j<3;j++)
+		{//counts the number of misplace tiles in comparison to goal state
+			if( goalstate[i][j] != ptemp[i][j] && ptemp[i][j] != '0' && goalstate[i][j] != '0')
+			{
+				cost++;
+			}
+		}
+
+	}
+
+	return cost;
+}
+
+//---------------------------------------------------------------------
+// This private method calculates the Manhattan distance for each node
+// @Param: char ptemp [][3]-a two-D array with tiles
+// @Param:void
+// @Returns: int cost-cost of the number of moves required to reach goal state
+//---------------------------------------------------------------------
+int PuzzleTree::Manhattan(char ptemp[][3])
+{
+	int distance = 0;
+	int hdistance = 0;
+	int vdistance = 0;
+	char goalstate[3][3] = {'1','2','3',
+							'4','5','6',
+							'7','8','0'};
+
+	for(int r = 0; r < 3; r++)
+	{
+		for(int c = 0; c <3; c++)
+		{
+			if(root->puzzle[r][c] != '0'){
+				if(goalstate[0][0] == ptemp[r][c])
+				{
+					//calculates the absolute value of the horizontal distance
+					hdistance = abs(r-0);
+					//calculates the absolute value of the vertical distance
+					vdistance = abs(c-0);
+
+				}
+				else if (goalstate[0][1] == ptemp[r][c])
+				{
+					hdistance = abs(0-r);
+					vdistance = abs(1-c);
+				}
+				else if (goalstate[0][2] == ptemp[r][c])
+				{
+					hdistance = abs(0-r);
+					vdistance = abs(2-c);
+				}else if (goalstate[1][0] == ptemp[r][c])
+				{
+					hdistance = abs(1-r);
+					vdistance = abs(0-c);
+				}else if (goalstate[1][1] == ptemp[r][c]){
+
+					hdistance = abs(1-r);
+					vdistance = abs(1-c);
+				}else if (goalstate[1][2] == ptemp[r][c]){
+
+					hdistance = abs(1-r);
+					vdistance = abs(2-c);
+
+				}else if (goalstate[2][0] == ptemp[r][c]){
+
+					hdistance = abs(2-r);
+					vdistance = abs(0-c);
+				}else if (goalstate[2][1] == ptemp[r][c]){
+
+					hdistance = abs(2-r);
+					vdistance = abs(1-c);
+				}else if (goalstate[2][2] == ptemp[r][c]){
+
+					hdistance = abs(2-r);
+					vdistance = abs(2-c);
+				}
+				// adds both vertical and horizontal distances
+				distance += hdistance +  vdistance;
+			}
+		}
+	}
+	return distance;// returns total distance
+}
+
+//---------------------------------------------------------------------
+// This private method calculates inversions to determine whether board is solvable
+// @Param: void
+// @Param:void
+// @Returns: bool solvable- true for solvable and false for unsolvable
+//---------------------------------------------------------------------
+bool PuzzleTree::Solvable(void)
+{
+	char num [8]= {'1','2','3','4','5','6','7','8'};
+	int inversions = 0;
+	int max =8;
+	bool solvable = false;
+
+	for(int r = 0; r < 3; r++)
+	{
+		for(int c = 0; c < 3; c++)
+		{
+			if(root->puzzle[r][c] != '0')
+			{
+				for(int i = 0 ; i < max; i++)
+				{
+					if(root->puzzle[r][c] > num[i])
+					{
+						//adds number for inversions for each number
+						inversions++;
+					}
+					if(root->puzzle[r][c] == num[i])
+					{
+						for(int k = i; k<max ; k++)
+						{ // re-arranges arranges of nums after each inversion found
+							num[k] = num[k+1];
+						}
+						max--;// resizes array 
+					}
+
+				}
+
+			}
+		}
+	}
+
+	if( inversions % 2 == 0)
+	{
+		solvable = true;
+	}else
+	{
+		solvable = false;
+	}
+	return solvable;
+}
+
+
+
+
+//---------------------------------------------------------------------
+// This private method generates children of root node
+// @Param: char tiles [][3]- two-D array of tiles
+// @Param:void
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::GenerateChildren(char tiles [][3])
+{// each node can have up to four children
+	char Child1 [3][3];
+	char Child2 [3][3];
+	char Child3 [3][3];
+	char Child4 [3][3];
+	char temp;
+	char Tmove1,Tmove2,Tmove3,Tmove4;
+	int Tcost1,Tcost2,Tcost3,Tcost4=0;
+
+	for(int r=0; r<3;r++)
+	{
+		for(int c =0; c<3;c++)
+		{//finds space
+			if(root->puzzle[r][c] == '0')
+			{// finds whether space is in a corner
+				if(r % 2 == 0 && c % 2 == 0)
+				{//copies root node 
+					Clone(tiles,Child1);
+					Clone(tiles,Child2);
+					if( r == 0 && c==0){
+						//swaps space in array and adds to queue and tree
+						temp = Child1[r][c];
+						Child1[r][c] = Child1[r][c+1];
+						Child1[r][c+1] = temp;
+						Tmove1 = 'R';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+						
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+						
+
+						temp = Child2 [r][c];
+						Child2 [r][c] = Child2 [r+1][c];
+						Child2 [r+1][c]=temp;
+						Tmove2 ='D';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+						
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+						
+
+					}else if( r==0 && c==2)
+					{
+						temp = Child1[r][c];
+						Child1 [r][c] = Child1 [r][c-1];
+						Child1 [r][c-1] = temp;
+						Tmove1 = 'L';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+						
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+						
+						temp = Child2[r][c];
+						Child2 [r][c] = Child2[r+1][c];
+						Child2 [r+1][c] = temp;
+						Tmove2 = 'D';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+						
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+						
+
+					}else if(r==2 && r==0)
+					{
+						temp = Child1[r][c];
+						Child1[r][c] = Child1[r-1][c];
+						Child1[r-1][c] = temp;
+						Tmove1 = 'U';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+						
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+						
+
+						temp = Child2[r][c];
+						Child2[r][c] = Child2[r][c+1];
+						Child2[r][c+1] = temp;
+						Tmove2 = 'R';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+						
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+
+					}else if (r==2 && c==2){
+
+						temp =Child1[r][c];
+						Child1[r][c] = Child1[r][c-1];
+						Child1[r][c-1] = temp;
+						Tmove1 = 'L';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+						
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+						
+
+						temp = Child2[r][c];
+						Child2[r][c] = Child2[r-1][c];
+						Child2 [r-1][c] = temp;
+						Tmove2 = 'U';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+						
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+						cout<< "im here" << endl;
+
+					}
+				}// finds space in middle of row and column
+				else if( (r%2 != 0 && c%2==0) || (r%2 ==0 && c%2 != 0))
+				{//copies the root array
+					Clone(tiles,Child1);
+					Clone(tiles,Child2);
+					Clone(tiles,Child3);
+					if(r == 0 && c == 1)
+					{
+						temp= Child1[r][c];
+						Child1[r][c] = Child1[r][c-1];
+						Child1[r][c-1] = temp;
+						Tmove1 = 'L';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+						
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+						
+
+						temp = Child2[r][c];
+						Child2[r][c] = Child2[r][c+1];
+						Child2[r][c+1] =temp;
+						Tmove2 = 'R';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+						
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+						
+
+						temp = Child3[r][c];
+						Child3[r][c] = Child3[r+1][c];
+						Child3[r+1][c] = temp;
+						Tmove3 = 'D';
+						Tcost3 = HammingCost(Child3) + Manhattan(Child3);
+					
+						Openlist.Insert(Child3,Tcost3);
+						Insert(Child3,Tmove3);
+
+					}else if(r == 1 && c == 0)
+					{
+						temp = Child2[r][c];
+						Child2[r][c] = Child2[r-1][c];
+						Child2[r-1][c] =temp;
+						Tmove2 = 'U';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+					
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+
+						temp= Child1[r][c];
+						Child1[r][c] = Child1[r+1][c];
+						Child1[r+1][c] = temp;
+						Tmove1 = 'D';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+											
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+					
+
+						temp = Child3[r][c];
+						Child3[r][c] = Child3[r][c+1];
+						Child3[r][c+1] = temp;
+						Tmove3 = 'R';
+						Tcost3 = HammingCost(Child3) + Manhattan(Child3);
+					
+						Openlist.Insert(Child3,Tcost3);
+						Insert(Child3,Tmove3);
+						
+
+					}else if(r == 2 && c ==1)
+					{
+						temp = Child2[r][c];
+						Child2[r][c] = Child2[r][c-1];
+						Child2[r][c-1] =temp;
+						Tmove2 = 'L';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+						
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+						
+						temp= Child1[r][c];
+						Child1[r][c] = Child1[r][c+1];
+						Child1[r][c+1] = temp;
+						Tmove1 = 'R';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+						
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+
+						temp = Child3[r][c];
+						Child3[r][c] = Child3[r-1][c];
+						Child3[r-1][c] = temp;
+						Tmove3 = 'U';
+						Tcost3 = HammingCost(Child3) + Manhattan(Child3);
+					
+						Openlist.Insert(Child3,Tcost3);
+						Insert(Child3,Tmove3);
+
+					}else if(r == 1 && c == 2)
+					{
+						temp= Child1[r][c];
+						Child1[r][c] = Child1[r+1][c];
+						Child1[r+1][c] = temp;
+						Tmove1 = 'D';
+						Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+						
+						Openlist.Insert(Child1,Tcost1);
+						Insert(Child1,Tmove1);
+						
+						temp = Child2[r][c];
+						Child2[r][c] = Child2[r-1][c];
+						Child2[r-1][c] =temp;
+						Tmove2 = 'U';
+						Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+						
+						Openlist.Insert(Child2,Tcost2);
+						Insert(Child2,Tmove2);
+						
+						temp = Child3[r][c];
+						Child3[r][c] = Child3[r][c-1];
+						Child3[r][c-1] = temp;
+						Tmove3 = 'L';
+						Tcost3 = HammingCost(Child3) + Manhattan(Child3);
+								
+						Openlist.Insert(Child3,Tcost3);
+						Insert(Child3,Tmove3);
+						
+					}
+					
+				}else 
+				{//generates children when space is in the middle of board
+					Clone(tiles,Child1);
+					Clone(tiles,Child2);
+					Clone(tiles,Child3);
+					Clone(tiles,Child4);
+
+					temp = Child1[r][c];
+					Child1[r][c] = Child1[r-1][c];
+					Child1[r-1][c] = temp;
+					Tmove1 = 'U';
+					Tcost1 = HammingCost(Child1) + Manhattan(Child1);
+					
+					Openlist.Insert(Child1,Tcost1);
+					Insert(Child1,Tmove1);
+
+					temp = Child2[r][c];
+					Child2[r][c] = Child2[r+1][c];
+					Child2[r+1][c] = temp;
+					Tmove2 = 'D';
+					Tcost2 = HammingCost(Child2) + Manhattan(Child2);
+		
+					Openlist.Insert(Child2,Tcost2);
+					Insert(Child2,Tmove2);
+
+					temp = Child3[r][c];
+					Child3[r][c] = Child3[r][c-1];
+					Child3[r][c-1] = temp;
+					Tmove3 = 'L';
+					Tcost3 = HammingCost(Child3) + Manhattan(Child3);
+					
+					Openlist.Insert(Child3,Tcost3);
+					Insert(Child3,Tmove3);
+	
+
+					temp = Child4[r][c];
+					Child4[r][c] = Child4[r][c+1];
+					Child4[r][c+1] = temp;
+					Tmove4 = 'R';
+					Tcost4 = HammingCost(Child4) + Manhattan(Child4);
+					
+					Openlist.Insert(Child4,Tcost4);
+					Insert(Child4,Tmove4);
+
+				}
+			}
+		}
+	}
+}
+
+//---------------------------------------------------------------------
+// This private method creates a copy of an array
+// @Param: char tiles [][3]- two-D array of tiles
+// @Param: char toClone - two-D array to hold copy of tiles
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::Clone(char tiles [][3],char toClone[][3])
+{
+	for(int r =0; r <3; r++)
+	{
+		for(int c = 0; c <3; c++)
+		{// copies elements from tiles to toClone array
+			toClone[r][c] = tiles[r][c];
+
+		}
+	}
+
+}
+
+//---------------------------------------------------------------------
+// This private method gets to root of tree
+// @Param: void
+// @Param: void
+// @Returns: returns root pointer
+//---------------------------------------------------------------------
+Node* PuzzleTree::Gethead(void)
+{
+	return root;
+}
+
+//---------------------------------------------------------------------
+// This private method checks to see if two arrays have the same elements
+// @Param: Node*& Rptr- root pointer
+// @Param: char tiles[][3]-two-D to be checkedd
+// @Returns: returns bool same- true if arrays are similar and false if their not
+//---------------------------------------------------------------------
+bool PuzzleTree::SameElements(Node*& Rptr,char tiles [][3])
+{
+	bool same = false;
+	for(int r=0; r<3;r++)
+	{
+		for(int c =0; c<3; c++)
+		{
+			if(Rptr->puzzle[r][c] == tiles[r][c])
+			{
+				same = true;
+				cout << Rptr->puzzle[r][c] << "p->t " << tiles[r][c] << endl;
+			}
+		
+		}
+
+		cout << endl;
+	}
+
+	return same;
+}
+
+//---------------------------------------------------------------------
+// This private method deletes entire tree
+// @Param: Node*& Root- root pointer
+// @Param: void
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::DeleteTree(Node* Root)
+{//checks to see if root is null
+	  if(root)
+	 {
+		DeleteTree(root->left);
+		DeleteTree(root->right);
+		DeleteTree(root->down);
+		DeleteTree(root->up);
+		
+	  
+
+	if(root->left==NULL)
+		delete(root->left);
+	if(root->right==NULL)
+		delete(root->right);
+	if(root->down == NULL)
+		 delete(root->down) ;
+	if(root->up == NULL)
+		delete(root->up);
+	delete(root);
+	  }
+
+}
+
+//---------------------------------------------------------------------
+// This private method runs 8 puzzle operation
+// @Param: void
+// @Param: void
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::run(void)
+{
+	Node* ptr = root;
+	char plays [3][3];
+	int cost = 0,count =1;
+	char goal [3][3]= {'1','2','3',
+					   '4','5','6',
+					   '7','8','0'};
+	
+	
+	while(Manhattan(root->puzzle) != 0 )
+	{
+		GenerateChildren(root->puzzle);//creates children
+		Openlist.DeleteBoard(plays);//dequeues head of priorit queue
+		cout << "moves " << count << endl;
+		//prints moves
+		for(int r = 0; r<3; r++)
+		{
+			for(int c= 0; c<3; c++)
+			{
+				cout << plays[r][c] << " ";
+			}
+
+			cout << endl;
+		}
+		cout << endl ;
+		// calculates cost of move
+		cost = HammingCost(plays)+Manhattan(plays);
+		//enqueues move to closedlist
+		Closedlist.Insert(plays,cost);
+		ResetRoot(plays);// resets root to new play array
+		count++;
+	}
+
+}
+
+//---------------------------------------------------------------------
+// This private method resets root
+// @Param: char tiles [][3]-two-D array with new root array
+// @Param: void
+// @Returns: void
+//---------------------------------------------------------------------
+void PuzzleTree::ResetRoot(char tiles [][3])
+{
+	
+	//copies new array into root
+	for(int i = 0; i < 3 ; i++)
+	{
+		for(int j =0; j<3; j++)
+		{
+			root->puzzle[i][j] = tiles[i][j];
+		}
+	}
+	
+}
