@@ -1,0 +1,198 @@
+
+#include "PriorityQueue.h"
+using namespace std;
+
+//-----------------------------------------------------------------
+// Parameterized constructor: set initialise values for the class
+// @Param: void
+// @Returns: void
+//-----------------------------------------------------------------
+PriorityQueue::PriorityQueue(void)
+{
+  head = tail = NULL;
+	qSize = 0;
+}
+
+//-----------------------------------------------------------------
+// Parameterized destructor: empty destructor
+// @Param: void
+// @Returns: void
+//-----------------------------------------------------------------
+PriorityQueue::~PriorityQueue(void)
+{
+}
+
+
+//---------------------------------------------------------------------
+// This public method inserts array with attributes into priority queue
+// @Param: char tiles [][3]-array to be inserted
+// @Param: int Tcost- heuristic cost of board
+// @Returns: void
+//---------------------------------------------------------------------
+void PriorityQueue::Insert(char tiles[][3], int Tcost)
+{// creates new node
+	PNode *TempNode = new PNode;
+	TempNode->cost = Tcost;
+	for(int r = 0; r<3; r++)
+	{
+		for(int c = 0; c<3; c++)
+		{
+			TempNode->board[r][c] = tiles[r][c];
+		}
+	}
+	//inserts new node into queue in correct position
+	Enqueue(TempNode);
+	QueueSize();
+	
+}
+
+//---------------------------------------------------------------------
+// This private method inserts a node into the priority queue
+// @Param: PNode*& T - reference node
+// @Returns: void
+//---------------------------------------------------------------------
+void PriorityQueue::Enqueue(PNode*& T)
+{
+	if(!head)
+	{
+		head = T;
+		tail = T;
+		head->Next = tail->Next = NULL;
+	} 
+	else
+	{
+		//Put in front of head
+		if(T->cost < head->cost) 
+		{
+			T->Next = head;
+			head = T;
+			tail =T->Next;
+		} 
+		else
+		{
+			PNode *Ptr = head;
+			PNode *Prev = head;
+			//Find proper location to insert (hopefully)
+			while(Ptr != NULL && T->cost >= Ptr->cost) 
+			{	
+				Prev = Ptr;
+				Ptr = Ptr->Next;
+			}
+			//Actually link node into place
+			Prev->Next = T;
+			T->Next = Ptr;
+		
+			//Update tail (if necessary)
+			if(Ptr && Ptr->Next == NULL)
+			{
+				tail = Ptr;
+			}
+		}
+	}
+}
+
+
+//---------------------------------------------------------------------
+// This public method prints the information from the priority queue
+// @Param: void
+// @Returns: void
+//---------------------------------------------------------------------
+void PriorityQueue::PrintQueue(void)
+{
+	PNode* Ptr = head;
+	while(Ptr != NULL)
+	{
+		for(int i = 0; i < 3; i++)
+		 {
+			 for(int j = 0; j < 3 ; j++)
+			{
+				 cout << Ptr->board [i][j];
+
+			 }
+			 cout << endl;
+		 }
+		Ptr = Ptr->Next;
+	}
+}
+
+//---------------------------------------------------------------------
+// This public method checks to see if the priority queue is empty
+// @Param: void
+// @Returns: bool message - true if head is null and false otherwise
+//---------------------------------------------------------------------
+bool PriorityQueue::IsEmpty(void)
+{
+	return (head == NULL);
+}
+
+
+//---------------------------------------------------------------------
+// This private method calculates the size of the priority queue
+// @Param: void
+// @Returns: int qSize - size of queue
+//---------------------------------------------------------------------
+int PriorityQueue:: QueueSize(void)
+{
+	return qSize++;
+
+}
+
+//---------------------------------------------------------------------
+// This public method deletes array from queue
+// @Param: char tiles [][3]- two-D array of tiles
+// @Returns: void
+//---------------------------------------------------------------------
+void PriorityQueue::DeleteBoard(char tiles [][3])
+{
+	PNode* Temp = head;
+	if(IsEmpty())
+	{
+		cout << "Queue is empty" << endl;
+		exit(1);
+	}else 
+	{
+		for(int r=0; r<3; r++){
+
+			for(int c =0; c<3;c++){
+
+				tiles[r][c] = head->board[r][c];
+			}
+		}
+		Dequeue(Temp);
+	}
+}
+
+//---------------------------------------------------------------------
+// This private method removes node from queue
+// @Param: PNode*& Thead- node to be removed
+// @Returns: void
+//---------------------------------------------------------------------
+void PriorityQueue::Dequeue(PNode*& Thead)
+{
+	if(head)
+	{
+		head = head->Next;
+		if(head==NULL)
+		{
+			tail=head;
+		}
+		delete Thead;
+
+	}
+
+}
+
+//---------------------------------------------------------------------
+// This public method destroys priority queue
+// @Param:void
+// @Returns: void
+//---------------------------------------------------------------------
+void PriorityQueue::Clearlist(void)
+{
+	char tiles[3][3];
+
+	while(!IsEmpty())
+	{
+		DeleteBoard(tiles);
+	}
+}
