@@ -1,0 +1,43 @@
+
+#pragma once
+#include <iostream>
+using namespace std; 
+
+
+//-----------------------------------------------------------------------------
+//PNode: struct to hold data members and pointers of Node.
+// Data members: char [][3], int, Pointers: Next
+//-----------------------------------------------------------------------------
+
+struct PNode
+{
+  PNode* Next;
+	char board [3][3];
+	int cost;
+
+};
+
+
+/*---------------------------------------------------------   
+  The Following class builds a Optimal Binary Tree and
+  generates the code for each letter in a file
+-----------------------------------------------------------*/
+class PriorityQueue
+{
+private:
+	PNode * head;
+	PNode * tail;
+	int qSize;
+	void Enqueue(PNode *&);
+	void Dequeue(PNode*&);
+	
+public:
+	PriorityQueue(void);
+	~PriorityQueue(void);
+	void DeleteBoard(char tiles [][3]);
+	void Insert(char tiles[][3],int);
+	bool IsEmpty(void);
+	void PrintQueue(void);
+	int QueueSize();
+	void Clearlist(void);
+};
